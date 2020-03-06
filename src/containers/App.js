@@ -1,11 +1,17 @@
 import React, { Component } from 'react';
-import Person from './Person/Person';
+import Persons from '../components/Persons/Persons';
+import Cockpit from '../components/Cockpit/Cockpit';
 // import logo from './logo.svg';
 // import Radium, { StyleRoot } from 'radium';
 // import styled from 'styled-components';
-import './App.css';
+import classes from './App.css';
+import WithClass from '../hoc/WithClass';
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    console.log('[App.js] constructor');
+  }
   state = {
     persons: [
       { id: 'sadjhn', name: 'Suman', age: 23 },
@@ -14,7 +20,25 @@ class App extends Component {
     ],
     otherValue: 'random value',
     personStatus: false,
+    showCockpitStatus: true,
   };
+
+  static getDerivedStateFromProps(props, state) {
+    console.log('[App.js] getDerivedStateFromProps', props);
+  }
+
+  componentDidMount() {
+    console.log('[App.js] componentDidMount');
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log('[App.js] shouldComponentUpdate...');
+    return true;
+  }
+
+  componentDidUpdate() {
+    console.log('[App.js] componentDidUpdate...');
+  }
 
   deletePersonHandler = (personIndex) => {
     //const person = this.state.persons.slice(); slice give a copy of the array and avoid mutating of persons array
@@ -43,36 +67,27 @@ class App extends Component {
   };
 
   render() {
-
     let person = null;
-    if (this.state.personStatus) {
-      person = (<div>
-        {this.state.persons.map((person, index) => {
-          return <Person
-            click={() => this.deletePersonHandler(index)}
-            name={person.name}
-            age={person.age}
-            key={person.id}
-            changed={(event) => this.nameChangedHandler(event, person.id)} />
-        })}
-      </div>);
-    }
 
-    const classes = [];
-    if (this.state.persons.length <= 2) {
-      classes.push('red');
-    }
-    if (this.state.persons.length <= 1) {
-      classes.push('bold');
+    if (this.state.personStatus) {
+      person = <Persons
+        persons={this.state.persons}
+        clicked={this.deletePersonHandler}
+        changed={this.nameChangedHandler}
+      />;
     }
 
     return (
-      <div className="App">
-        <h1>This is my first react app</h1>
-        <p className={classes.join(' ')}>This is working</p>
-        <button className='button' onClick={this.togglePersonHandler}>Switch Name</button>
+      <WithClass classes={classes.App}>
+        <button onClick={() => { this.setState({ showCockpitStatus: false }); }}>Remove Cockpit</button>
+        {this.state.showCockpitStatus ? (<Cockpit
+          title={this.props.appTitle}
+          showPersons={this.state.personStatus}
+          personsLength={this.state.persons.length}
+          clicked={this.togglePersonHandler}
+        />) : null}
         {person}
-      </div >
+      </WithClass >
     );
 
     //return React.createElement('div', null, React.createElement('h1', null, 'This is a header section !!!'));
