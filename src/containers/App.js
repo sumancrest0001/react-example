@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Persons from '../components/Persons/Persons';
 import Cockpit from '../components/Cockpit/Cockpit';
 // import logo from './logo.svg';
 // import Radium, { StyleRoot } from 'radium';
 // import styled from 'styled-components';
 import classes from './App.css';
-import WithClass from '../hoc/WithClass';
+import withClass from '../hoc/withClass';
+import Aux from '../hoc/Aux';
+import AuthContext from '../context/auth-context';
+import ErrorBoundary from '../components/ErrorBoundary/ErrorBoundary';
 
 class App extends Component {
   constructor(props) {
@@ -21,6 +25,8 @@ class App extends Component {
     otherValue: 'random value',
     personStatus: false,
     showCockpitStatus: true,
+    changeCounter: 0,
+    isAuthenticated: false
   };
 
   static getDerivedStateFromProps(props, state) {
@@ -48,6 +54,10 @@ class App extends Component {
 
   }
 
+  authenticationHandler = () => {
+    this.setState({ isAuthenticated: true });
+  }
+
   nameChangedHandler = (event, id) => {
     const personIndex = this.state.persons.findIndex(p => {
       return p.id === id;
@@ -58,8 +68,14 @@ class App extends Component {
     person.name = event.target.value;
     const persons = [...this.state.persons];
     persons[personIndex] = person;
-    this.setState({ persons: persons })
-  }
+
+    this.setState((prevState, props) => {
+      return {
+        persons: persons,
+        changeCounter: prevState.changeCounter + 1
+      };
+    });
+  };
 
   togglePersonHandler = () => {
     const showPerson = this.state.personStatus;
@@ -78,21 +94,31 @@ class App extends Component {
     }
 
     return (
-      <WithClass classes={classes.App}>
+      <Aux >
         <button onClick={() => { this.setState({ showCockpitStatus: false }); }}>Remove Cockpit</button>
-        {this.state.showCockpitStatus ? (<Cockpit
-          title={this.props.appTitle}
-          showPersons={this.state.personStatus}
-          personsLength={this.state.persons.length}
-          clicked={this.togglePersonHandler}
-        />) : null}
-        {person}
-      </WithClass >
+        <AuthContext.Provider
+          value={{
+            authenticated: this.state.isAuthenticated,
+            login: this.authenticationHandler
+          }}>
+          {this.state.showCockpitStatus ? (<Cockpit
+            title={this.props.appTitle}
+            showPersons={this.state.personStatus}
+            personsLength={this.state.persons.length}
+            clicked={this.togglePersonHandler}
+          />) : null}
+          {person}
+        </AuthContext.Provider>
+      </Aux >
     );
 
     //return React.createElement('div', null, React.createElement('h1', null, 'This is a header section !!!'));
   }
 }
 
-export default App;
+App.propTypes = {
+  title: PropTypes.string,
+};
+
+export default withClass(App, classes.App);
 
